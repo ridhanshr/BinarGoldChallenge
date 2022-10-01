@@ -1,5 +1,4 @@
 import re
-from datetime import datetime
 import sqlite3
 import time
 from flask import Flask, jsonify
@@ -49,7 +48,7 @@ def removeEmoticon(text):
     return newText
 
 def removeNewLines(text):
-    newText = re.sub('\n', ' ', text)
+    newText = re.sub(r'\\n.{0}', ' ', text)
     return newText
 
 def removeMoreSpace(text):
@@ -57,9 +56,9 @@ def removeMoreSpace(text):
     return newText
 
 def preProcess(text): 
-    text = removePunc(text)
     text = removeEmoticon(text)
     text = removeNewLines(text)
+    text = removePunc(text)
     text = removeMoreSpace(text)
     return text
 
@@ -71,15 +70,15 @@ def text_processing():
     
     start_time = time.time()
     text = request.form.get('text')
-    data = preProcess(text)
+    cleanText = preProcess(text)
     end_time = time.time()
 
-    conn.execute('INSERT INTO cleanText (inputan, bersih) VALUES (?, ?)', (text, data))
+    conn.execute('INSERT INTO cleanText (inputan, bersih) VALUES (?, ?)', (text, cleanText))
     conn.commit()
     conn.close()
         
     json_response = {
-        'result': data,
+        'result': cleanText,
         'execute time': '{} s'.format((end_time - start_time))
     }
     response_data = jsonify(json_response)
