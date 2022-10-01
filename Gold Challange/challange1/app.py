@@ -1,4 +1,7 @@
 import re
+from datetime import datetime
+import sqlite3
+import time
 from flask import Flask, jsonify
 
 app = Flask(__name__)
@@ -31,6 +34,11 @@ swagger_config = {
 }
 swagger = Swagger(app, template=swagger_template, 
                   config=swagger_config)
+
+def get_db_connection():
+    conn = sqlite3.connect('D:\Belajar\Binar\Gold Challange\challange1\goldchallenge.db')
+    conn.row_factory = sqlite3.Row
+    return conn
     
 def removePunc(text):
     newText = re.sub(r'[^\w\s]', ' ', text)
@@ -48,7 +56,7 @@ def removeMoreSpace(text):
     newText = re.sub('  +', '', text)
     return newText
 
-def preProcess(text):
+def preProcess(text): 
     text = removePunc(text)
     text = removeEmoticon(text)
     text = removeNewLines(text)
@@ -59,21 +67,31 @@ def preProcess(text):
 @app.route('/text-processing', methods=['POST'])
 def text_processing():
     
+    conn = get_db_connection()
+    
+    start_time = time.time()
     text = request.form.get('text')
-    
+    data = preProcess(text)
+    end_time = time.time()
+
+    conn.execute('INSERT INTO cleanText (inputan, bersih) VALUES (?, ?)', (text, data))
+    conn.commit()
+    conn.close()
+        
     json_response = {
-        'status_code': 200,
-        'description': 'Teks yang diproses',
-        'data': preProcess(text)
+        'result': data,
+        'execute time': '{} s'.format((end_time - start_time))
     }
-    
     response_data = jsonify(json_response)
     return response_data
 
 @swag_from('docs/fileTextProcessing.yml', methods=['POST'])
 @app.route('/filetext-processing', methods=['POST'])
 def filetext_processing():
+   
+    conn = get_db_connection() 
     
+    start_time = time.time()
     reqFile = request.files['upfile']
     reqFile.save(secure_filename(reqFile.filename))
     with open(r"D:\Belajar\Binar\Gold Challange\challange1\{}".format(reqFile.filename),"r+") as f:
@@ -81,11 +99,16 @@ def filetext_processing():
         f.seek(0)
         f.write(preProcess(data))
         f.truncate()
+    cleanText = preProcess(data)
+    end_time = time.time()
+    
+    conn.execute('INSERT INTO cleanFileText (inputan, bersih) VALUES (?, ?)', (data, cleanText))
+    conn.commit()
+    conn.close()
     
     json_response = {
-        'status_code': 200,
-        'description': 'Teks yang diproses',
-        'data': preProcess(data)
+        'result': preProcess(cleanText),
+        'execute time': '{} s'.format((end_time - start_time))
     }
     
     response_data = jsonify(json_response)
