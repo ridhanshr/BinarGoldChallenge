@@ -47,6 +47,10 @@ def removeEmoticon(text):
     newText = re.sub(r'[^\x00-\x7F]+',' ', text)
     return newText
 
+def removeBytesText(text):
+    newText = re.sub(r'\\x.{2}',' ', text)
+    return newText
+
 def removeNewLines(text):
     newText = re.sub(r'\\n.{0}', ' ', text)
     return newText
@@ -57,6 +61,7 @@ def removeMoreSpace(text):
 
 def preProcess(text): 
     text = removeEmoticon(text)
+    text = removeBytesText(text)
     text = removeNewLines(text)
     text = removePunc(text)
     text = removeMoreSpace(text)
@@ -106,7 +111,7 @@ def filetext_processing():
     conn.close()
     
     json_response = {
-        'result': preProcess(cleanText),
+        'result': cleanText,
         'execute time': '{} s'.format((end_time - start_time))
     }
     
