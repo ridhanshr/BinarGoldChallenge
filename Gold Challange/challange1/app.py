@@ -51,8 +51,12 @@ def removeBytesText(text):
     newText = re.sub(r'\\x.{2}',' ', text)
     return newText
 
-def removeNewLines(text):
+def removeNewLinesText(text):
     newText = re.sub(r'\\n.{0}', ' ', text)
+    return newText
+
+def removeNewLines(text):
+    newText = re.sub(r'\n', ' ', text)
     return newText
 
 def removeMoreSpace(text):
@@ -62,6 +66,7 @@ def removeMoreSpace(text):
 def preProcess(text): 
     text = removeEmoticon(text)
     text = removeBytesText(text)
+    text = removeNewLinesText(text)
     text = removeNewLines(text)
     text = removePunc(text)
     text = removeMoreSpace(text)
